@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/content";
@@ -29,18 +29,30 @@ export const metadata: Metadata = {
     default: `${site.name} — ${site.role}`,
     template: `%s — ${site.name}`,
   },
-  description: `${site.name} is a ${site.role} based in ${site.location}. ${site.tagline}`,
+  description: `${site.name} is a ${site.role} based in ${site.location}. ${site.tagline} Specializing in React, Next.js and TypeScript.`,
+  applicationName: `${site.name} — Portfolio`,
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  publisher: site.name,
+  category: "technology",
   keywords: [
     "Vasilis Christopoulos",
     "Frontend Developer",
-    "React",
-    "Next.js",
+    "Senior Frontend Developer",
+    "React Developer",
+    "Next.js Developer",
     "TypeScript",
     "UI Developer",
+    "Web Developer",
     "Athens",
+    "Greece",
+    "Portfolio",
   ],
-  authors: [{ name: site.name, url: site.url }],
-  creator: site.name,
+  alternates: {
+    canonical: "/",
+  },
+  // openGraph/twitter share images are supplied automatically by
+  // opengraph-image.tsx and twitter-image.tsx (Next file conventions).
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -54,6 +66,32 @@ export const metadata: Metadata = {
     title: `${site.name} — ${site.role}`,
     description: site.tagline,
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  appleWebApp: {
+    capable: true,
+    title: site.name,
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#060711",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
