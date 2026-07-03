@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vasilis Christopoulos — Portfolio
 
-## Getting Started
+A fully animated, dark neon-glow developer portfolio built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4** and **Framer Motion**.
 
-First, run the development server:
+## ✨ Features
+
+- **Dark OLED aesthetic** with animated aurora background, masked grid, and a cursor-following glow spotlight
+- **Motion everywhere** — scroll-reveal + staggered entrances, magnetic buttons, rotating role text, animated counters, a scroll-linked experience timeline, and a live-feeling app preview. All motion respects `prefers-reduced-motion`.
+- **Sections**: Hero · About · Skills · Selected Work · Experience · Contact
+- Scroll-aware glass navbar with active-section tracking + animated mobile menu
+- Fully responsive (375 → 1440px) and keyboard accessible
+
+## 🚀 Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install      # first time only
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other scripts:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build    # production build
+npm run start    # serve the production build
+npm run lint     # eslint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✏️ Editing your content
 
-## Learn More
+**Everything you'd want to change lives in one file:** [`src/lib/content.ts`](src/lib/content.ts)
 
-To learn more about Next.js, take a look at the following resources:
+| What | Where |
+| --- | --- |
+| Name, role, tagline, bio, rotating titles | `site` |
+| Nav links | `navLinks` |
+| Skills + brand colors | `skills` |
+| Projects | `projects` |
+| Work history | `experiences` |
+| Social links | `socials` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Theme / colors
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Neon palette, fonts, and keyframes are defined in [`src/app/globals.css`](src/app/globals.css) under the `@theme` blocks (`--color-cyan`, `--color-violet`, etc.).
 
-## Deploy on Vercel
+### Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├─ app/                 layout (fonts + metadata), globals.css, page.tsx
+├─ lib/content.ts       ← all site content
+└─ components/
+   ├─ background/       AnimatedBackground, CursorGlow
+   ├─ ui/               Reveal, SectionHeading, MagneticButton, SpotlightCard, icons…
+   ├─ sections/         Hero, About, Skills, Projects, Experience, Contact
+   ├─ Navbar.tsx
+   └─ Footer.tsx
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌐 Deploy
+
+Zero-config on [Vercel](https://vercel.com) — import the repo and deploy. Point `vasilis-chri.gr` at it and update `site.url` in `content.ts`.
+
+---
+
+Crafted with Next.js & Framer Motion.
