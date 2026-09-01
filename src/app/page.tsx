@@ -46,13 +46,13 @@ const jsonLd = {
       inLanguage: "en",
       publisher: { "@id": `${site.url}/#person` },
     },
-    {
+    ...projects.map((project) => ({
       "@type": "CreativeWork",
-      name: projects[0]?.name,
-      url: projects[0]?.href,
-      description: projects[0]?.description,
+      name: project.name,
+      url: project.href,
+      description: project.description,
       author: { "@id": `${site.url}/#person` },
-    },
+    })),
   ],
 };
 

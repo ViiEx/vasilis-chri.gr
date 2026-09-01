@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { projects } from "@/lib/content";
+import { projects, type Project } from "@/lib/content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
@@ -9,11 +9,28 @@ import {
   ArrowUpRightIcon,
   CheckIcon,
   ExternalLinkIcon,
+  MailIcon,
 } from "@/components/ui/icons";
 
-export function Projects() {
-  const featured = projects[0];
+/** Status badge accents, keyed by a project's tone. */
+const TONES = {
+  live: {
+    badge: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
+    dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]",
+  },
+  beta: {
+    badge: "border-amber-400/30 bg-amber-400/10 text-amber-300",
+    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]",
+  },
+} as const;
 
+/** Each project gets its own stylized preview. */
+const PREVIEWS: Record<string, () => React.ReactElement> = {
+  crewdesk: CrewDeskPreview,
+  campfire: CampfirePreview,
+};
+
+export function Projects() {
   return (
     <section id="work" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24 sm:px-8 sm:py-32">
       <SectionHeading
@@ -23,72 +40,18 @@ export function Projects() {
         description="A look at what I've been crafting lately."
       />
 
-      <div className="mt-14">
-        <Reveal>
-          <SpotlightCard className="gradient-border glass overflow-hidden rounded-3xl">
-            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-2 lg:gap-10 lg:p-10">
-              {/* Text */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-mono text-xs text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-                    {featured.status}
-                  </span>
-                  <span className="font-mono text-xs text-faint">Featured project</span>
-                </div>
-
-                <h3 className="mt-5 font-heading text-3xl font-bold sm:text-4xl">
-                  {featured.name}
-                </h3>
-                <p className="mt-4 text-base leading-relaxed text-muted">
-                  {featured.longDescription}
-                </p>
-
-                <ul className="mt-6 space-y-2.5">
-                  {featured.highlights.map((h) => (
-                    <li key={h} className="flex items-center gap-3 text-sm text-foreground/90">
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-cyan/10 text-[10px] text-cyan">
-                        <CheckIcon />
-                      </span>
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {featured.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-md border border-border bg-white/[0.03] px-2.5 py-1 font-mono text-xs text-muted"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-8 flex-1" />
-                <a
-                  href={featured.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group/link inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-cyan to-violet px-6 py-3 text-sm font-semibold text-[#04050c] shadow-[0_0_28px_-8px_rgba(45,212,255,0.7)] transition-shadow duration-300 hover:shadow-[0_0_36px_-6px_rgba(168,85,247,0.8)]"
-                >
-                  Visit {featured.href.replace("https://", "")}
-                  <ExternalLinkIcon className="transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
-                </a>
-              </div>
-
-              {/* Mock preview */}
-              <CampfirePreview />
-            </div>
-          </SpotlightCard>
-        </Reveal>
+      <div className="mt-14 space-y-6">
+        {projects.map((project, i) => (
+          <Reveal key={project.id} delay={i * 0.05}>
+            <ProjectCard project={project} flip={i % 2 === 1} />
+          </Reveal>
+        ))}
 
         {/* CTA card */}
         <Reveal delay={0.1}>
           <a
             href="#contact"
-            className="group mt-6 flex items-center justify-between gap-6 rounded-2xl border border-dashed border-border bg-white/[0.02] p-6 transition-colors duration-300 hover:border-cyan/40 sm:p-8"
+            className="group flex items-center justify-between gap-6 rounded-2xl border border-dashed border-border bg-white/[0.02] p-6 transition-colors duration-300 hover:border-cyan/40 sm:p-8"
           >
             <div>
               <h3 className="font-heading text-xl font-semibold sm:text-2xl">
@@ -108,11 +71,90 @@ export function Projects() {
   );
 }
 
-/** Stylized preview evoking the Campfire community app. */
-function CampfirePreview() {
-  const servers = ["#2dd4ff", "#a855f7", "#f472d0", "#5b8cff"];
-  const channels = ["general", "introductions", "showcase"];
+/** Featured card: copy on one side, an app preview on the other. */
+function ProjectCard({ project, flip }: { project: Project; flip: boolean }) {
+  const tone = TONES[project.tone];
+  const Preview = PREVIEWS[project.id];
 
+  return (
+    <SpotlightCard className="gradient-border glass overflow-hidden rounded-3xl">
+      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-2 lg:gap-10 lg:p-10">
+        {/* Text */}
+        <div className={`flex flex-col ${flip ? "lg:order-2" : ""}`}>
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs ${tone.badge}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+              {project.status}
+            </span>
+            <span className="font-mono text-xs text-faint">Featured project</span>
+          </div>
+
+          <h3 className="mt-5 font-heading text-3xl font-bold sm:text-4xl">{project.name}</h3>
+          <p className="mt-4 text-base leading-relaxed text-muted">{project.longDescription}</p>
+
+          <ul className="mt-6 space-y-2.5">
+            {project.highlights.map((h) => (
+              <li key={h} className="flex items-center gap-3 text-sm text-foreground/90">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-cyan/10 text-[10px] text-cyan">
+                  <CheckIcon />
+                </span>
+                {h}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            {project.tags.map((t) => (
+              <span
+                key={t}
+                className="rounded-md border border-border bg-white/[0.03] px-2.5 py-1 font-mono text-xs text-muted"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-8 flex-1" />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/link inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-cyan to-violet px-6 py-3 text-sm font-semibold text-[#04050c] shadow-[0_0_28px_-8px_rgba(45,212,255,0.7)] transition-shadow duration-300 hover:shadow-[0_0_36px_-6px_rgba(168,85,247,0.8)]"
+            >
+              Visit {project.href.replace("https://", "")}
+              <ExternalLinkIcon className="transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+            </a>
+          </div>
+
+          {project.beta && (
+            <div className="mt-5 rounded-2xl border border-dashed border-amber-400/25 bg-amber-400/[0.04] p-4 sm:p-5">
+              <p className="text-sm leading-relaxed text-muted">{project.beta.note}</p>
+              <a
+                href={`mailto:${project.beta.email}?subject=${encodeURIComponent(project.beta.subject)}`}
+                className="group/beta mt-3 inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-200 transition-colors duration-300 hover:border-amber-300/70 hover:bg-amber-400/15"
+              >
+                <MailIcon className="text-base" />
+                {project.beta.label}
+                <ArrowUpRightIcon className="transition-transform duration-300 group-hover/beta:translate-x-0.5 group-hover/beta:-translate-y-0.5" />
+              </a>
+              <p className="mt-2.5 font-mono text-xs text-faint">{project.beta.email}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Mock preview */}
+        <div className={flip ? "lg:order-1" : ""}>{Preview && <Preview />}</div>
+      </div>
+    </SpotlightCard>
+  );
+}
+
+/** Shared frame: browser chrome + a fixed-height app body. */
+function PreviewFrame({ url, children }: { url: string; children: React.ReactNode }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
@@ -123,113 +165,215 @@ function CampfirePreview() {
     >
       <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-tr from-violet/20 to-cyan/10 blur-2xl" />
       <div className="overflow-hidden rounded-2xl border border-border bg-[#080a15] shadow-2xl">
-        {/* Browser chrome */}
         <div className="flex items-center gap-2 border-b border-border/70 bg-white/[0.03] px-4 py-2.5">
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
           <span className="ml-3 flex-1 truncate rounded-md bg-black/40 px-3 py-1 text-center font-mono text-[11px] text-faint">
-            campfire.gr
+            {url}
           </span>
         </div>
+        <div className="flex h-[300px] text-xs">{children}</div>
+      </div>
+    </motion.div>
+  );
+}
 
-        {/* App body */}
-        <div className="flex h-[300px] text-xs">
-          {/* Server rail */}
-          <div className="flex flex-col items-center gap-3 border-r border-border/60 bg-black/30 px-3 py-4">
-            {servers.map((c, i) => (
-              <div key={i} className="relative">
-                {i === 0 && (
-                  <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white" />
-                )}
-                <div
-                  style={{ backgroundColor: c }}
-                  className={`h-9 w-9 shrink-0 rounded-2xl transition-all ${
-                    i === 0 ? "rounded-xl" : "opacity-70"
-                  }`}
-                />
-              </div>
-            ))}
-            <div className="grid h-9 w-9 place-items-center rounded-2xl border border-dashed border-border text-base text-emerald-300">
-              +
-            </div>
+/** Stylized preview evoking the CrewDesk operations dashboard. */
+function CrewDeskPreview() {
+  const nav = ["Dashboard", "Customers", "Work orders", "Schedule", "Invoices"];
+  const stats = [
+    { label: "Open jobs", value: "12", color: "#2dd4ff" },
+    { label: "This week", value: "€4.8k", color: "#a855f7" },
+    { label: "Overdue", value: "2", color: "#f472d0" },
+  ];
+  const rows = [
+    { ref: "WO-1042", status: "In progress", color: "#2dd4ff" },
+    { ref: "WO-1041", status: "Scheduled", color: "#5b8cff" },
+    { ref: "WO-1039", status: "Invoiced", color: "#34d399" },
+  ];
+  const bars = [42, 68, 51, 80, 63, 92, 74];
+
+  return (
+    <PreviewFrame url="app.crewdesk.gr">
+      {/* Sidebar */}
+      <div className="hidden w-36 flex-col gap-1 border-r border-border/60 bg-black/20 p-3 sm:flex">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="grid h-6 w-6 place-items-center rounded-lg bg-gradient-to-br from-cyan to-violet font-heading text-[10px] font-bold text-[#04050c]">
+            CD
+          </span>
+          <span className="font-heading text-sm font-semibold text-foreground">CrewDesk</span>
+        </div>
+        {nav.map((item, i) => (
+          <div
+            key={item}
+            className={`rounded-md px-2 py-1.5 ${
+              i === 0 ? "bg-white/10 text-foreground" : "text-faint"
+            }`}
+          >
+            {item}
           </div>
+        ))}
+      </div>
 
-          {/* Channels */}
-          <div className="hidden w-36 flex-col gap-1 border-r border-border/60 bg-black/20 p-3 sm:flex">
-            <div className="mb-2 font-heading text-sm font-semibold text-foreground">
-              Campfire
-            </div>
-            {channels.map((ch, i) => (
+      {/* Main */}
+      <div className="flex flex-1 flex-col gap-3 p-3">
+        {/* Stat tiles */}
+        <div className="grid grid-cols-3 gap-2">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-lg border border-border/60 bg-white/[0.03] p-2">
+              <div className="truncate text-[10px] text-faint">{s.label}</div>
               <div
-                key={ch}
-                className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono ${
-                  i === 0 ? "bg-white/10 text-foreground" : "text-faint"
-                }`}
+                className="mt-1 font-heading text-base font-bold"
+                style={{ color: s.color }}
               >
-                <span className="text-cyan/60">#</span>
-                {ch}
-              </div>
-            ))}
-
-            {/* Voice room */}
-            <div className="mt-2 rounded-lg border border-cyan/20 bg-cyan/5 p-2">
-              <div className="flex items-center gap-1.5 text-cyan">
-                <VolumeIcon />
-                <span className="font-mono">Lounge</span>
-              </div>
-              <div className="mt-2 flex items-center gap-1.5">
-                {["#a855f7", "#2dd4ff", "#f472d0"].map((c, i) => (
-                  <motion.span
-                    key={i}
-                    animate={{ scale: [1, 1.18, 1] }}
-                    transition={{
-                      duration: 1.4,
-                      repeat: Infinity,
-                      delay: i * 0.25,
-                      ease: "easeInOut",
-                    }}
-                    style={{ backgroundColor: c }}
-                    className="h-5 w-5 rounded-full ring-2 ring-cyan/40"
-                  />
-                ))}
+                {s.value}
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Revenue bars */}
+        <div className="rounded-lg border border-border/60 bg-white/[0.02] p-2.5">
+          <div className="mb-2 flex items-center justify-between text-[10px] text-faint">
+            <span>Revenue</span>
+            <span className="font-mono text-emerald-300">+18%</span>
           </div>
-
-          {/* Main */}
-          <div className="flex flex-1 flex-col p-3">
-            <div className="mb-2 flex items-center gap-1.5 border-b border-border/50 pb-2 font-mono text-faint">
-              <span className="text-cyan/60">#</span> general
-            </div>
-            <div className="flex flex-col gap-3">
-              {[0, 1, 2].map((r) => (
-                <div key={r} className="flex gap-2">
-                  <div
-                    style={{ backgroundColor: servers[r % servers.length] }}
-                    className="h-7 w-7 shrink-0 rounded-full opacity-80"
-                  />
-                  <div className="flex-1 space-y-1.5 pt-1">
-                    <div className="h-2 w-16 rounded-full bg-white/15" />
-                    <div className="h-2 rounded-full bg-white/10" style={{ width: `${70 - r * 12}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Typing bar */}
-            <div className="mt-auto flex items-center gap-2 rounded-lg bg-black/40 px-3 py-2">
-              <span className="font-mono text-faint">Message #general</span>
+          <div className="flex h-14 items-end gap-1.5">
+            {bars.map((h, i) => (
               <motion.span
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                className="h-3 w-0.5 bg-cyan"
+                key={i}
+                initial={{ height: 0 }}
+                whileInView={{ height: `${h}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.1 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                className="flex-1 rounded-t-sm bg-gradient-to-t from-cyan/25 to-violet/70"
               />
+            ))}
+          </div>
+        </div>
+
+        {/* Work order rows */}
+        <div className="flex flex-col gap-1.5">
+          {rows.map((r) => (
+            <div
+              key={r.ref}
+              className="flex items-center gap-2 rounded-lg border border-border/50 bg-white/[0.02] px-2.5 py-2"
+            >
+              <span className="font-mono text-[10px] text-faint">{r.ref}</span>
+              <div className="h-2 flex-1 rounded-full bg-white/10" />
+              <span
+                className="shrink-0 rounded-full px-2 py-0.5 text-[10px]"
+                style={{ color: r.color, backgroundColor: `${r.color}1f` }}
+              >
+                {r.status}
+              </span>
             </div>
+          ))}
+        </div>
+      </div>
+    </PreviewFrame>
+  );
+}
+
+/** Stylized preview evoking the Campfire community app. */
+function CampfirePreview() {
+  const servers = ["#2dd4ff", "#a855f7", "#f472d0", "#5b8cff"];
+  const channels = ["general", "introductions", "showcase"];
+
+  return (
+    <PreviewFrame url="campfire.gr">
+      {/* Server rail */}
+      <div className="flex flex-col items-center gap-3 border-r border-border/60 bg-black/30 px-3 py-4">
+        {servers.map((c, i) => (
+          <div key={i} className="relative">
+            {i === 0 && (
+              <span className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white" />
+            )}
+            <div
+              style={{ backgroundColor: c }}
+              className={`h-9 w-9 shrink-0 rounded-2xl transition-all ${
+                i === 0 ? "rounded-xl" : "opacity-70"
+              }`}
+            />
+          </div>
+        ))}
+        <div className="grid h-9 w-9 place-items-center rounded-2xl border border-dashed border-border text-base text-emerald-300">
+          +
+        </div>
+      </div>
+
+      {/* Channels */}
+      <div className="hidden w-36 flex-col gap-1 border-r border-border/60 bg-black/20 p-3 sm:flex">
+        <div className="mb-2 font-heading text-sm font-semibold text-foreground">Campfire</div>
+        {channels.map((ch, i) => (
+          <div
+            key={ch}
+            className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono ${
+              i === 0 ? "bg-white/10 text-foreground" : "text-faint"
+            }`}
+          >
+            <span className="text-cyan/60">#</span>
+            {ch}
+          </div>
+        ))}
+
+        {/* Voice room */}
+        <div className="mt-2 rounded-lg border border-cyan/20 bg-cyan/5 p-2">
+          <div className="flex items-center gap-1.5 text-cyan">
+            <VolumeIcon />
+            <span className="font-mono">Lounge</span>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            {["#a855f7", "#2dd4ff", "#f472d0"].map((c, i) => (
+              <motion.span
+                key={i}
+                animate={{ scale: [1, 1.18, 1] }}
+                transition={{
+                  duration: 1.4,
+                  repeat: Infinity,
+                  delay: i * 0.25,
+                  ease: "easeInOut",
+                }}
+                style={{ backgroundColor: c }}
+                className="h-5 w-5 rounded-full ring-2 ring-cyan/40"
+              />
+            ))}
           </div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Main */}
+      <div className="flex flex-1 flex-col p-3">
+        <div className="mb-2 flex items-center gap-1.5 border-b border-border/50 pb-2 font-mono text-faint">
+          <span className="text-cyan/60">#</span> general
+        </div>
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((r) => (
+            <div key={r} className="flex gap-2">
+              <div
+                style={{ backgroundColor: servers[r % servers.length] }}
+                className="h-7 w-7 shrink-0 rounded-full opacity-80"
+              />
+              <div className="flex-1 space-y-1.5 pt-1">
+                <div className="h-2 w-16 rounded-full bg-white/15" />
+                <div className="h-2 rounded-full bg-white/10" style={{ width: `${70 - r * 12}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Typing bar */}
+        <div className="mt-auto flex items-center gap-2 rounded-lg bg-black/40 px-3 py-2">
+          <span className="font-mono text-faint">Message #general</span>
+          <motion.span
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="h-3 w-0.5 bg-cyan"
+          />
+        </div>
+      </div>
+    </PreviewFrame>
   );
 }
 

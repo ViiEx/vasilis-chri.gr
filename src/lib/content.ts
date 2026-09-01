@@ -59,6 +59,7 @@ export const skillCategories: Skill["category"][] = [
 ];
 
 export type Project = {
+  id: string;
   name: string;
   description: string;
   longDescription: string;
@@ -66,10 +67,38 @@ export type Project = {
   href: string;
   highlights: string[];
   status: string;
+  /** Accent used for the status badge. */
+  tone: "live" | "beta";
+  /** Optional invitation to join a closed beta. */
+  beta?: { note: string; label: string; email: string; subject: string };
 };
 
 export const projects: Project[] = [
   {
+    id: "crewdesk",
+    name: "CrewDesk",
+    description:
+      "An operations hub for small service businesses — customers, jobs, scheduling and invoicing in one place.",
+    longDescription:
+      "CrewDesk runs a small service business from a single screen: customers and contacts, work orders and tasks, a shared schedule with public online booking, and quotes that turn into invoices and payments — all on top of a live dashboard and a full activity history.",
+    tags: ["React", "TypeScript", "Convex", "Tailwind CSS", "Stripe"],
+    href: "https://app.crewdesk.gr",
+    highlights: [
+      "Customers, work orders & tasks",
+      "Scheduling with public online booking",
+      "Quotes → invoices → payments",
+    ],
+    status: "Private Beta",
+    tone: "beta",
+    beta: {
+      note: "CrewDesk is in private beta. Want to try it with your own team?",
+      label: "Request beta access",
+      email: "support@crewdesk.gr",
+      subject: "CrewDesk beta access",
+    },
+  },
+  {
+    id: "campfire",
     name: "Campfire",
     description:
       "A real-time community platform — servers, channels, voice rooms, and shared activities.",
@@ -83,6 +112,7 @@ export const projects: Project[] = [
       "Shared community activities",
     ],
     status: "Live",
+    tone: "live",
   },
 ];
 
